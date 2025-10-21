@@ -8,23 +8,33 @@
 import SwiftUI
 
 struct TodoListView: View {
-    @State private var items: [String] = []
+    @State private var items: [Item] = []
     @State private var newItem: String = ""
     
     var body: some View {
         List {
-            ForEach(items, id: \.self) { item in
-                Text(item)
+            ForEach($items) {
+                ItemView(item: $0)
             }
             
-            TextField("新しい項目を追加", text: $newItem)
-                .textFieldStyle(.roundedBorder)
-            
-                .onSubmit {
-                    items.append(newItem)
-                    
+            HStack {
+                TextField("新しい項目を追加", text: $newItem)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit {
+                        addItem()
+                    }
+                
+                Button("追加") {
+                    addItem()
                 }
+                .disabled(newItem.isEmpty)
+            }
         }
+    }
+    
+    private func addItem() {
+        items.append(Item(text: newItem, isCompleted: false))
+        newItem = ""
     }
 }
 
