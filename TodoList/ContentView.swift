@@ -9,11 +9,10 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var text = "Swift"
-    @State private var count = 0
+    @AppStorage("count") private var count = 0
     
     var body: some View {
         List {
-            
             Section {
                 Text("Hello, \(text)!")
                 
@@ -29,7 +28,6 @@ struct ContentView: View {
             Section {
                 counterSection()
             }
-            
         }
     }
     
