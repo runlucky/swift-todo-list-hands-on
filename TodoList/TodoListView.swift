@@ -16,6 +16,13 @@ struct TodoListView: View {
             ForEach($items) {
                 ItemView(item: $0)
             }
+            .onMove { from, to in
+                items.move(fromOffsets: from, toOffset: to)
+            }
+            .onDelete {
+                items.remove(atOffsets: $0)
+            }
+            
             
             HStack {
                 TextField("新しい項目を追加", text: $newItem)
