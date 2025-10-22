@@ -14,39 +14,43 @@ struct TodoListView: View {
     @Environment(\.scenePhase) private var scenePhase
     
     var body: some View {
-        List {
-            ForEach($items) {
-                ItemView(item: $0)
-            }
-            .onMove { from, to in
-                items.move(fromOffsets: from, toOffset: to)
-            }
-            .onDelete {
-                items.remove(atOffsets: $0)
-            }
-            
-            
-            HStack {
-                TextField("新しい項目を追加", text: $newItem)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit {
+        NavigationStack {
+            List {
+                ForEach($items) {
+                    ItemView(item: $0)
+                }
+                .onMove { from, to in
+                    moveItems(from: from, to: to)
+                }
+                .onDelete {
+                    deleteItems($0)
+                }
+                
+                HStack {
+                    TextField("新しい項目を追加", text: $newItem)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit {
+                            addItem()
+                        }
+                    
+                    Button("追加") {
                         addItem()
                     }
-                
-                Button("追加") {
-                    addItem()
+                    .disabled(newItem.isEmpty)
                 }
-                .disabled(newItem.isEmpty)
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    EditButton()
+                }
             }
         }
         .task {
-            let decoded = try? JSONDecoder().decode([Item].self, from: itemsData)
-            items = decoded ?? []
+            loadItems()
         }
         .onChange(of: scenePhase) {
-            if scenePhase == .background,
-               let data = try? JSONEncoder().encode(items) {
-                itemsData = data
+            if scenePhase == .background {
+                saveItems()
             }
         }
     }
@@ -55,6 +59,26 @@ struct TodoListView: View {
         items.append(Item(text: newItem, isCompleted: false))
         newItem = ""
     }
+    
+    private func saveItems() {
+        if let data = try? JSONEncoder().encode(items) {
+            itemsData = data
+        }
+    }
+    
+    private func loadItems() {
+        let decoded = try? JSONDecoder().decode([Item].self, from: itemsData)
+        items = decoded ?? []
+    }
+    
+    func deleteItems(_ indexSet: IndexSet) {
+        items.remove(atOffsets: indexSet)
+    }
+
+    func moveItems(from: IndexSet, to: Int) {
+        items.move(fromOffsets: from, toOffset: to)
+    }
+
 }
 
 
