@@ -8,8 +8,10 @@
 import SwiftUI
 
 struct TodoListView: View {
+    @AppStorage("items") var itemsData = Data()
     @State private var items: [Item] = []
     @State private var newItem: String = ""
+    @Environment(\.scenePhase) private var scenePhase
     
     var body: some View {
         List {
@@ -35,6 +37,16 @@ struct TodoListView: View {
                     addItem()
                 }
                 .disabled(newItem.isEmpty)
+            }
+        }
+        .task {
+            let decoded = try? JSONDecoder().decode([Item].self, from: itemsData)
+            items = decoded ?? []
+        }
+        .onChange(of: scenePhase) {
+            if scenePhase == .background,
+               let data = try? JSONEncoder().encode(items) {
+                itemsData = data
             }
         }
     }

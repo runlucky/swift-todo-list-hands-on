@@ -23,10 +23,16 @@ struct ItemView: View {
     }
 }
     
-struct Item: Identifiable {
-    let id = UUID()
+struct Item: Identifiable, Codable {
+    let id: UUID
     var text: String
     var isCompleted: Bool
+    
+    init(text: String, isCompleted: Bool) {
+        self.id = UUID()
+        self.text = text
+        self.isCompleted = isCompleted
+    }
 }
 
 #Preview {
