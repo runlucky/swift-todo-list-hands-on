@@ -6,17 +6,17 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct TodoListView: View {
-    @AppStorage("items") var itemsData = Data()
-    @State private var items: [Item] = []
+    @Environment(\.modelContext) private var context
+    @Query(sort: \Item.order) private var items: [Item]
     @State private var newItem: String = ""
-    @Environment(\.scenePhase) private var scenePhase
     
     var body: some View {
         NavigationStack {
             List {
-                ForEach($items) {
+                ForEach(items) {
                     ItemView(item: $0)
                 }
                 .onMove { from, to in
@@ -45,40 +45,28 @@ struct TodoListView: View {
                 }
             }
         }
-        .task {
-            loadItems()
-        }
-        .onChange(of: scenePhase) {
-            if scenePhase == .background {
-                saveItems()
-            }
-        }
     }
     
     private func addItem() {
-        items.append(Item(text: newItem, isCompleted: false))
+        let order = (items.map(\.order).max() ?? 0) + 1
+        context.insert(Item(text: newItem, isCompleted: false, order: order))
         newItem = ""
     }
     
-    private func saveItems() {
-        if let data = try? JSONEncoder().encode(items) {
-            itemsData = data
-        }
-    }
-    
-    private func loadItems() {
-        let decoded = try? JSONDecoder().decode([Item].self, from: itemsData)
-        items = decoded ?? []
-    }
-    
     func deleteItems(_ indexSet: IndexSet) {
-        items.remove(atOffsets: indexSet)
+        indexSet.forEach {
+            context.delete(items[$0])
+        }
     }
 
     func moveItems(from: IndexSet, to: Int) {
-        items.move(fromOffsets: from, toOffset: to)
+        var reordered = items
+        reordered.move(fromOffsets: from, toOffset: to)
+        
+        reordered.enumerated().forEach { index, item in
+            item.order = index
+        }
     }
-
 }
 
 
